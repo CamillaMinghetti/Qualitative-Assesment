@@ -29,27 +29,14 @@ if clinician == "Yes":
 # Second question: name
 name = st.text_input("Please enter your name")
 
-'''
 video_paths = [
-    
-    "D:\\Video colonoscopy\\Video per questionario\\VideoColonoscopy3.mp4",
-    "D:\\Video colonoscopy\\Video per questionario\\VideoColonoscopy4.mp4",
-    "D:\\Video colonoscopy\\Video per questionario\\VideoColonoscopy5.mp4",
-    "D:\\Video colonoscopy\\Video per questionario\\VideoColonoscopy6.mp4",
-    "D:\\Video colonoscopy\\Video per questionario\\VideoColonoscopy7.mp4",
-    "D:\\Video colonoscopy\\Video per questionario\\VideoColonoscopy8.mp4",
-    "D:\\Video colonoscopy\\Video per questionario\\VideoColonoscopy11.mp4",
-]
-'''
-
-video_paths = [
-    '/media/omen_w01/SSD/Statistical Video Analysis/VideoColonoscopy3.mp4',
-    '/media/omen_w01/SSD/Statistical Video Analysis/VideoColonoscopy4.mp4',
-    '/media/omen_w01/SSD/Statistical Video Analysis/VideoColonoscopy5.mp4',
-    '/media/omen_w01/SSD/Statistical Video Analysis/VideoColonoscopy6.mp4',
-    '/media/omen_w01/SSD/Statistical Video Analysis/VideoColonoscopy7.mp4',
-    '/media/omen_w01/SSD/Statistical Video Analysis/VideoColonoscopy8.mp4',
-    '/media/omen_w01/SSD/Statistical Video Analysis/VideoColonoscopy11.mp4',
+    './VideoColonoscopy3.mp4',
+    './VideoColonoscopy4.mp4',
+    './VideoColonoscopy5.mp4',
+    './VideoColonoscopy6.mp4',
+    './VideoColonoscopy7.mp4',
+    './VideoColonoscopy8.mp4',
+    './VideoColonoscopy11.mp4',
 ]
 
 # Session state
