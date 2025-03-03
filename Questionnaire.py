@@ -36,7 +36,10 @@ video_paths = [
     './VideoColonoscopy6.mp4',
     './VideoColonoscopy7.mp4',
     './VideoColonoscopy8.mp4',
+    './VideoColonoscopy9.mp4',
+    './VideoColonoscopy10.mp4',
     './VideoColonoscopy11.mp4',
+    './VideoColonoscopy12.mp4',
 ]
 
 # Session state
