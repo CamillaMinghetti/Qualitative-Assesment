@@ -5,7 +5,7 @@ from google.oauth2.service_account import Credentials
 import json
 
 # Configura Google Sheets
-creds_json = st.secrets["GOOGLE_CREDENTIALS"]
+creds_json = st.secrets["google_credentials"]["GOOGLE_CREDENTIALS"]
 creds_dict = json.loads(creds_json)
 creds = Credentials.from_service_account_info(creds_dict)
 client = gspread.authorize(creds)
