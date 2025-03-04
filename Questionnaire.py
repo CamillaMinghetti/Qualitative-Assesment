@@ -1,35 +1,10 @@
 import streamlit as st  # type: ignore
 import pandas as pd  
-import gspread
+import os
 from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
 
-def save_to_google_sheets(name, clinician, experience_level, procedures, responses):
-    # Definisci lo scope (opzionale, se necessario)
-    scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-
-    # Recupera le credenziali dai secrets (che devono essere un dizionario)
-    creds_dict = st.secrets["GOOGLE_CREDENTIALS"]
-    
-    # Crea le credenziali
-    creds = Credentials.from_service_account_info(creds_dict)
-    
-    # Autorizza l'accesso a Google Sheets
-    client = gspread.authorize(creds)
-    
-    # Apri il Google Sheet (assicurati di averlo aperto fuori dalla funzione se necessario)
-    SHEET_ID = "1keTMaYMtN0D-YIClxJFxYAKOMeb1ddKPIHH6Q92LxYw"  # Sostituisci con il tuo Google Sheet ID
-    sheet = client.open_by_key(SHEET_ID).sheet1
-
-    # Prepara i dati da salvare
-    new_data = [name, clinician, experience_level, procedures] + responses
-
-    # Aggiungi la nuova riga al foglio
-    sheet.append_row(new_data)
-
-    st.success("Your answers have been saved!")
-
-
-# Titolo della web app
+# Titolo dell'app
 st.title("Qualitative Performance Assessment of EndoDAC and Depth Pro Models")
 
 # Descrizione del questionario
@@ -43,7 +18,7 @@ st.write(
 # Prima domanda: sei un clinico?
 clinician = st.radio("Are you a clinician?", ["Yes", "No"])
 
-# Se sei un clinico, chiediamo esperienza
+# Se sei un clinico, quale livello di esperienza?
 experience_level = None
 procedures_performed = None
 if clinician == "Yes":
@@ -53,7 +28,7 @@ if clinician == "Yes":
         ["<50", "Between 50 and 100", ">100"]
     )
 
-# Nome del partecipante
+# Seconda domanda: nome
 name = st.text_input("Please enter your name")
 
 # Video da mostrare
@@ -70,13 +45,13 @@ video_paths = [
     './VideoColonoscopy12.mp4',
 ]
 
-# Session state per gestire le domande
+# Session state
 if "question_index" not in st.session_state:
     st.session_state["question_index"] = 0
 if "responses" not in st.session_state:
     st.session_state["responses"] = [None] * len(video_paths)
 
-# Se il nome è stato inserito, mostriamo il questionario
+# Se l'utente ha inserito il nome, procedi con il questionario
 if name:
     st.header("Questionnaire")
     
@@ -107,8 +82,56 @@ if name:
             st.session_state["question_index"] += 1
             st.rerun()
     
-    # Salvataggio delle risposte su Google Sheets
+    # Codice per inviare le risposte a Google Sheets
     if question_index == len(video_paths) - 1 and st.button("Submit Answers"):
-        responses = [st.session_state["responses"][i] if st.session_state["responses"][i] else "No Response" for i in range(len(video_paths))]
+        # Ottieni le credenziali JSON da Streamlit Secrets
+        gcp_credentials = st.secrets["gcp_credentials"]
 
-        save_to_google_sheets(name, clinician, experience_level if clinician == "Yes" else None, procedures_performed if clinician == "Yes" else None, responses)
+        # Crea un dizionario con le credenziali
+        credentials_dict = {
+            "type": gcp_credentials["type"],
+            "project_id": gcp_credentials["project_id"],
+            "private_key_id": gcp_credentials["private_key_id"],
+            "private_key": gcp_credentials["private_key"],
+            "client_email": gcp_credentials["client_email"],
+            "client_id": gcp_credentials["client_id"],
+            "auth_uri": gcp_credentials["auth_uri"],
+            "token_uri": gcp_credentials["token_uri"],
+            "auth_provider_x509_cert_url": gcp_credentials["auth_provider_x509_cert_url"],
+            "client_x509_cert_url": gcp_credentials["client_x509_cert_url"],
+            "universe_domain": gcp_credentials["universe_domain"]
+        }
+
+        # Crea le credenziali utilizzando il dizionario
+        creds = Credentials.from_service_account_info(credentials_dict, scopes=["https://www.googleapis.com/auth/spreadsheets"])
+
+        # Connetti a Google Sheets
+        service = build("sheets", "v4", credentials=creds)
+        sheet_id = "1keTMaYMtN0D-YIClxJFxYAKOMeb1ddKPIHH6Q92LxYw"  # Sostituisci con il tuo Google Sheet ID  # Sostituisci con l'ID del tuo Google Sheets
+
+        # Crea i dati da inviare
+        new_data = {
+            "Name": name,
+            "Clinician": clinician,
+            "Experience Level": experience_level if clinician == "Yes" else None,
+            "Procedures Performed": procedures_performed if clinician == "Yes" else None,
+        }
+
+        for i in range(len(video_paths)):
+            new_data[f"Question {i+1}"] = st.session_state["responses"][i] if st.session_state["responses"][i] else "No Response"
+
+        # Prepara la riga dei dati da inviare a Google Sheets
+        data = [list(new_data.values())]
+
+        # Scrivi i dati nel foglio
+        sheet = service.spreadsheets()
+        request = sheet.values().append(
+            spreadsheetId=sheet_id,
+            range="Sheet1!A1",  # Sostituisci con la tua gamma (range) di celle
+            valueInputOption="RAW",
+            body={"values": data},
+        )
+        request.execute()
+
+        st.success("Your answers have been saved to Google Sheets!")
+        st.stop()
