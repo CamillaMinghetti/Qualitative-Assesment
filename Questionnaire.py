@@ -3,23 +3,30 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 
-
-# Configura Google Sheets
 def save_to_google_sheets(name, clinician, experience_level, procedures, responses):
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    # Definisci lo scope (opzionale, se necessario)
+    scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+
+    # Recupera le credenziali dai secrets (che devono essere un dizionario)
+    creds_dict = st.secrets["GOOGLE_CREDENTIALS"]
+    
+    # Crea le credenziali
+    creds = Credentials.from_service_account_info(creds_dict)
+    
+    # Autorizza l'accesso a Google Sheets
     client = gspread.authorize(creds)
+    
+    # Apri il Google Sheet (assicurati di averlo aperto fuori dalla funzione se necessario)
+    SHEET_ID = "1keTMaYMtN0D-YIClxJFxYAKOMeb1ddKPIHH6Q92LxYw"  # Sostituisci con il tuo Google Sheet ID
+    sheet = client.open_by_key(SHEET_ID).sheet1
 
-    # Apri il Google Sheet (sostituisci con il tuo ID)
-    sheet = client.open_by_key("ABC1234567890xyz").sheet1  # Sostituisci con il tuo ID foglio
-
-    # Crea una nuova riga con i dati
+    # Prepara i dati da salvare
     new_data = [name, clinician, experience_level, procedures] + responses
 
-    # Aggiungi la riga nel foglio
+    # Aggiungi la nuova riga al foglio
     sheet.append_row(new_data)
 
-    st.success("Risposte salvate con successo su Google Sheets!")
+    st.success("Your answers have been saved!")
 
 
 # Titolo della web app
